@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "herepath: a simpler way to find your files in Python"
+abstract: >-
+  herepath builds paths relative to a project's root directory, independent of
+  the current working directory. It is a Python port of the R 'here' package,
+  intended for scripts, notebooks and reproducible analyses.
+type: software
+authors:
+  - given-names: Jonathan
+    family-names: Katende Pinto
+    email: katendepinto@gmail.com
+    # orcid: "https://orcid.org/0000-0000-0000-0000"  # add yours if you have one
+version: 0.1.0
+date-released: "2026-06-13"
+license: MIT
+repository-code: "https://github.com/katendepinto/herepath"
+url: "https://github.com/katendepinto/herepath"
+keywords:
+  - reproducible research
+  - project root
+  - file paths
+  - here
+  - rprojroot
+  - Python
+# After your first Zenodo release, add the DOI it mints, e.g.:
+# doi: "10.5281/zenodo.XXXXXXX"

@@ -20,6 +20,13 @@ All notable changes to this project are documented here. The format is based on
   duplicated in subdirectories and caused false-positive roots. Add it back with
   `set_criteria(...)` if you rely on it.
 
+### Fixed
+- `i_am()` now pins the root under the shared lock (atomic search-and-set),
+  consistent with `reset()` and auto-detection.
+- `using_root()` documents that it saves/restores the process-global root and is
+  intended for single-threaded use; mutating the root from another thread during
+  an active block is unsupported.
+
 ## [0.1.0] - 2026-06-13
 
 Initial release — a Python port of the R [`here`](https://here.r-lib.org/)

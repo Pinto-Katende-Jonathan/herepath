@@ -250,6 +250,15 @@ def using_root(path: PathLike) -> Iterator[Path]:
             assert here("data") == tmp_path / "data"
         # previous root (or auto-detection) restored here
 
+    .. warning::
+       This saves and restores the **process-global** root, so it is meant for
+       single-threaded use (tests, notebooks). It is not safe to mutate the
+       root from another thread (``reset()``, ``i_am()``, another
+       ``using_root()``) while a block is active: the lock cannot be held across
+       the ``yield`` without serialising the whole block, so the restore on exit
+       would overwrite the concurrent change. If you need a per-thread or
+       per-task root, manage it yourself rather than relying on the global state.
+
     Parameters
     ----------
     path:
@@ -361,16 +370,24 @@ def i_am(path: PathLike, *, uuid: str | None = None, quiet: bool = False) -> Pat
         raise ValueError(f"`path` must be relative to the project root, not absolute: {path}")
 
     start = Path.cwd()
-    for directory in _ancestors(start):
-        candidate = directory / rel
-        if candidate.is_file() and (uuid is None or _file_contains(candidate, uuid)):
-            reason = f"contains the file `{rel.as_posix()}`"
-            if uuid is not None:
-                reason += " with the matching identifier"
-            _state.set(directory, reason, declared=True)
-            if not quiet:
-                dr_here(show_reason=False)
-            return _state.root  # type: ignore[return-value]
+    # Hold the lock for the whole search-and-set so the root is pinned
+    # atomically (consistent with reset() and _ensure_root()).
+    found: Path | None = None
+    with _lock:
+        for directory in _ancestors(start):
+            candidate = directory / rel
+            if candidate.is_file() and (uuid is None or _file_contains(candidate, uuid)):
+                reason = f"contains the file `{rel.as_posix()}`"
+                if uuid is not None:
+                    reason += " with the matching identifier"
+                _state.set(directory, reason, declared=True)
+                found = _state.root
+                break
+
+    if found is not None:
+        if not quiet:
+            dr_here(show_reason=False)  # I/O kept outside the lock
+        return found
 
     lines = [
         "Could not find associated project in working directory or any parent directory.",

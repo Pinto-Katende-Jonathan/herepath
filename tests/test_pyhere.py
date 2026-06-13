@@ -119,6 +119,25 @@ def test_i_am_prints_message_by_default(tmp_path, capsys):
     assert "Current working directory" not in out
 
 
+def test_i_am_acquires_lock(tmp_path, monkeypatch):
+    # Regression: i_am() must pin the root under the lock, like reset().
+    _touch(tmp_path / "run.py")
+    acquired = []
+    real_lock = _core._lock
+
+    class _SpyLock:
+        def __enter__(self):
+            acquired.append(True)
+            return real_lock.__enter__()
+
+        def __exit__(self, *exc):
+            return real_lock.__exit__(*exc)
+
+    monkeypatch.setattr(_core, "_lock", _SpyLock())
+    pyhere.i_am("run.py", quiet=True)
+    assert acquired, "i_am() should acquire the lock before mutating state"
+
+
 def test_i_am_absolute_path_raises(tmp_path):
     with pytest.raises(ValueError):
         pyhere.i_am(str(tmp_path / "x.py"))

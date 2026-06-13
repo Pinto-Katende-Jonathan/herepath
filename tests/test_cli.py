@@ -48,6 +48,17 @@ def test_cli_report_quiet(tmp_path, capsys):
     assert "Current working directory" not in out
 
 
+def test_cli_reports_error_cleanly(tmp_path, capsys, monkeypatch):
+    # A misconfigured PYHERE_ROOT must yield a clean error + exit 1, not a
+    # traceback (so `ROOT="$(pyhere)"` fails predictably).
+    monkeypatch.setenv(_core.ENV_VAR, str(tmp_path / "missing"))
+    rc = cli.main([])
+    assert rc == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""  # nothing on stdout to capture
+    assert "Error:" in captured.err
+
+
 def test_cli_version(capsys):
     with pytest.raises(SystemExit) as exc:
         cli.main(["--version"])

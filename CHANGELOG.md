@@ -21,6 +21,9 @@ All notable changes to this project are documented here. The format is based on
   `set_criteria(...)` if you rely on it.
 
 ### Fixed
+- CLI now prints a clean one-line `Error: ...` to stderr and exits 1 on failure
+  (e.g. a misconfigured `PYHERE_ROOT`) instead of dumping a traceback, so shell
+  capture like `ROOT="$(pyhere)"` fails predictably.
 - `i_am()` now pins the root under the shared lock (atomic search-and-set),
   consistent with `reset()` and auto-detection.
 - `using_root()` documents that it saves/restores the process-global root and is

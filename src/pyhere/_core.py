@@ -1,0 +1,302 @@
+"""Core implementation of :mod:`pyhere`.
+
+A Python port of the R `here` package (https://here.r-lib.org/).
+
+The project root is discovered by walking the directory tree upwards from the
+current working directory until a directory matching one of a set of
+*criteria* is found (a ``.here`` file, a ``pyproject.toml``, a ``.git``
+directory, ...). Once found, :func:`here` builds paths relative to that root,
+acting as a drop-in replacement for :func:`os.path.join`.
+
+The root can also be declared explicitly and robustly with :func:`i_am`.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Callable, Iterator, Union
+
+__all__ = ["here", "i_am", "set_here", "dr_here"]
+
+PathLike = Union[str, Path]
+
+
+class Criterion:
+    """A single rule that decides whether a directory is the project root."""
+
+    def __init__(self, description: str, testfun: Callable[[Path], bool]):
+        self.description = description
+        self._testfun = testfun
+
+    def test(self, directory: Path) -> bool:
+        try:
+            return bool(self._testfun(directory))
+        except OSError:
+            return False
+
+    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+        return f"Criterion({self.description!r})"
+
+
+def _has_file(name: str) -> Criterion:
+    return Criterion(
+        f"contains a file `{name}`",
+        lambda d: (d / name).is_file(),
+    )
+
+
+def _has_dir(name: str) -> Criterion:
+    return Criterion(
+        f"contains a directory `{name}`",
+        lambda d: (d / name).is_dir(),
+    )
+
+
+def _has_entry(name: str, description: str) -> Criterion:
+    return Criterion(description, lambda d: (d / name).exists())
+
+
+def _has_glob(pattern: str) -> Criterion:
+    return Criterion(
+        f"contains a file matching `{pattern}`",
+        lambda d: any(d.glob(pattern)),
+    )
+
+
+# Ordered list of default criteria, mirroring (and Pythonising) the R package.
+DEFAULT_CRITERIA: list[Criterion] = [
+    _has_file(".here"),
+    # Python project markers
+    _has_file("pyproject.toml"),
+    _has_file("setup.py"),
+    _has_file("setup.cfg"),
+    _has_file("requirements.txt"),
+    _has_file("Pipfile"),
+    _has_file("poetry.lock"),
+    _has_file("environment.yml"),
+    # Editors / IDEs / other project systems
+    _has_dir(".vscode"),
+    _has_dir(".idea"),
+    _has_glob("*.Rproj"),
+    _has_file("_quarto.yml"),
+    # Version control roots (a `.git` worktree may be a file, not a directory)
+    _has_entry(".git", "contains a `.git` directory or file (Git root)"),
+    _has_dir(".hg"),
+    _has_dir(".svn"),
+]
+
+
+class _RootState:
+    """Holds the resolved project root for the running session."""
+
+    def __init__(self) -> None:
+        self.root: Path | None = None
+        self.wd: Path | None = None
+        self.reason: str | None = None
+        self.declared: bool = False  # True once i_am() pinned the root
+
+    def set(self, root: Path, reason: str, declared: bool) -> None:
+        self.root = Path(root).resolve()
+        self.wd = Path.cwd()
+        self.reason = reason
+        self.declared = declared
+
+
+_state = _RootState()
+
+
+def _ancestors(start: Path) -> Iterator[Path]:
+    start = start.resolve()
+    yield start
+    yield from start.parents
+
+
+def _find_root(start: Path, criteria: list[Criterion]) -> tuple[Path | None, str | None]:
+    """Return ``(root, reason)`` for the first ancestor matching a criterion."""
+    for directory in _ancestors(start):
+        for crit in criteria:
+            if crit.test(directory):
+                return directory, crit.description
+    return None, None
+
+
+def _ensure_root() -> None:
+    if _state.root is not None:
+        return
+    start = Path.cwd()
+    root, reason = _find_root(start, DEFAULT_CRITERIA)
+    if root is None:
+        _state.set(
+            start,
+            "is the initial working directory (no root criteria matched)",
+            declared=False,
+        )
+    else:
+        assert reason is not None  # found together with root
+        _state.set(root, reason, declared=False)
+
+
+def _file_contains(path: Path, needle: str, n: int = 100) -> bool:
+    """Return True if ``needle`` appears in the first ``n`` lines of ``path``."""
+    try:
+        with path.open("r", encoding="utf-8", errors="replace") as handle:
+            for i, line in enumerate(handle):
+                if i >= n:
+                    break
+                if needle in line:
+                    return True
+    except OSError:
+        return False
+    return False
+
+
+def here(*args: PathLike) -> Path:
+    """Build a path relative to the project root.
+
+    Use as a drop-in replacement for :func:`os.path.join`; the result is
+    always an absolute path anchored at the project root, regardless of the
+    current working directory.
+
+    Each argument may itself contain ``/``-separated components. Absolute
+    paths are returned unchanged, so it is safe to pass either project-relative
+    or absolute paths::
+
+        here()                       # the project root
+        here("data", "x.csv")        # root/data/x.csv
+        here("data/x.csv")           # same -- components may contain "/"
+        data = here("data")          # absolute
+        here(data, "x.csv")          # data/x.csv -- absolute anchor kept
+
+    Parameters
+    ----------
+    *args:
+        Path components below the project root. Can be empty, in which case
+        the project root itself is returned.
+
+    Returns
+    -------
+    pathlib.Path
+        The absolute path to the requested location.
+    """
+    _ensure_root()
+    assert _state.root is not None
+    if not args:
+        return _state.root
+    # joinpath() resets to the last absolute component, which gives exactly the
+    # documented "absolute paths are returned unchanged" behaviour.
+    return _state.root.joinpath(*(str(a) for a in args))
+
+
+def i_am(path: PathLike, *, uuid: str | None = None, quiet: bool = False) -> Path:
+    """Declare the location of the current script relative to the project root.
+
+    Call this near the top of a script or notebook. It walks up from the
+    current working directory until it finds a directory that contains
+    ``path``, and pins that directory as the project root. This protects
+    against running a script from an unexpected directory.
+
+    On success it prints a one-line situation report (``here() starts at ...``),
+    mirroring the R package; pass ``quiet=True`` to suppress it.
+
+    Parameters
+    ----------
+    path:
+        The project-relative path to the current script. Must be relative.
+    uuid:
+        Optional. If given, a unique string that must appear within the first
+        100 lines of the file, for extra safety against moved/renamed files.
+    quiet:
+        Suppress the informative message. Defaults to False.
+
+    Returns
+    -------
+    pathlib.Path
+        The resolved project root.
+
+    Raises
+    ------
+    ValueError
+        If ``path`` is absolute.
+    FileNotFoundError
+        If no matching project directory is found.
+    """
+    rel = Path(path)
+    if rel.is_absolute():
+        raise ValueError(f"`path` must be relative to the project root, not absolute: {path}")
+
+    start = Path.cwd()
+    for directory in _ancestors(start):
+        candidate = directory / rel
+        if candidate.is_file() and (uuid is None or _file_contains(candidate, uuid)):
+            reason = f"contains the file `{rel.as_posix()}`"
+            if uuid is not None:
+                reason += " with the matching identifier"
+            _state.set(directory, reason, declared=True)
+            if not quiet:
+                dr_here(show_reason=False)
+            return _state.root  # type: ignore[return-value]
+
+    lines = [
+        "Could not find associated project in working directory or any parent directory.",
+        f"- Path in project: {rel.as_posix()}",
+    ]
+    if uuid is not None:
+        lines.append(f"- File must contain: {uuid}")
+    lines.append(f"- Current working directory: {start.resolve()}")
+    lines.append("Please run from within the project associated with this file and try again.")
+    raise FileNotFoundError("\n".join(lines))
+
+
+def set_here(path: PathLike = ".", verbose: bool = True) -> Path:
+    """Create an empty ``.here`` marker file.
+
+    When :func:`here` encounters such a file it uses the containing directory
+    as the project root. Useful when none of the default criteria apply.
+
+    Parameters
+    ----------
+    path:
+        Directory in which to create the ``.here`` file. Defaults to the
+        current directory.
+    verbose:
+        Print a message about what happened. Defaults to True.
+
+    Returns
+    -------
+    pathlib.Path
+        The path to the ``.here`` file.
+    """
+    directory = Path(path).resolve()
+    file_path = directory / ".here"
+
+    if file_path.exists():
+        if verbose:
+            print(f"File .here already exists in {directory}")
+    else:
+        file_path.write_text("", encoding="utf-8")
+        if verbose:
+            print(f"Created file .here in {directory} .")
+
+    return file_path
+
+
+def dr_here(show_reason: bool = True) -> None:
+    """Print a situation report explaining where the project root is and why.
+
+    Parameters
+    ----------
+    show_reason:
+        Include the reason and working-directory details. Defaults to True.
+    """
+    _ensure_root()
+    assert _state.root is not None
+    if show_reason:
+        message = (
+            f"here() starts at {_state.root}."
+            f"\n- This directory {_state.reason}"
+            f"\n- Initial working directory: {_state.wd}"
+            f"\n- Current working directory: {Path.cwd()}"
+        )
+    else:
+        message = f"here() starts at {_state.root}"
+    print(message)

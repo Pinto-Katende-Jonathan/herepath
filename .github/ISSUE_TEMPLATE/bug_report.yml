@@ -1,0 +1,38 @@
+name: Bug report
+description: Report something that isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for filing a report! Please fill in the details below.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal steps or code that triggers the problem.
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Output of `pyhere --report`
+      description: Run `pyhere --report` (or `pyhere.dr_here()`) and paste the output.
+      render: text
+    validations:
+      required: false
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: pyhere version, Python version, and OS.
+      placeholder: "pyhere 0.1.0, Python 3.12, Windows 11"
+    validations:
+      required: true

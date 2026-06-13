@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "py-here"
+version = "0.1.0"
+description = "A simpler way to find your files -- a Python port of the R 'here' package."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [{ name = "Jonathan Katende Pinto", email = "katendepinto@gmail.com" }]
+keywords = ["path", "project", "root", "here", "rprojroot", "filesystem"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Filesystems",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "pytest-cov>=4", "ruff>=0.5", "mypy>=1.10"]
+
+[project.scripts]
+pyhere = "pyhere.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/katendepinto/py-here"
+Documentation = "https://github.com/katendepinto/py-here#readme"
+Issues = "https://github.com/katendepinto/py-here/issues"
+Changelog = "https://github.com/katendepinto/py-here/blob/main/CHANGELOG.md"
+"R original" = "https://here.r-lib.org/"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+pyhere = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.coverage.run]
+branch = true
+source = ["pyhere"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+
+[tool.mypy]
+strict = true
+files = ["src"]

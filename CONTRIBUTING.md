@@ -1,7 +1,7 @@
 # Contributing to pyhere
 
-Thanks for taking the time to contribute! 🎉 This project is small and friendly;
-contributions of all sizes are welcome — bug reports, docs, tests, and code.
+Thanks for taking the time to contribute. This project is small and friendly;
+contributions of all sizes are welcome: bug reports, docs, tests, and code.
 
 ## Development setup
 
@@ -24,7 +24,7 @@ ruff format .         # auto-format
 mypy                  # type-check
 ```
 
-All of the above run in CI on every pull request, across Python 3.8–3.13 on
+All of the above run in CI on every pull request, across Python 3.8 to 3.13 on
 Linux, macOS and Windows. Please make sure they pass locally first.
 
 ## Pull request guidelines

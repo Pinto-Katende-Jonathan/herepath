@@ -1,4 +1,4 @@
-# pyhere
+# py-here
 
 [![CI](https://github.com/katendepinto/py-here/actions/workflows/ci.yml/badge.svg)](https://github.com/katendepinto/py-here/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/py-here.svg)](https://pypi.org/project/py-here/)
@@ -7,12 +7,12 @@
 
 A simpler way to find your files. A Python port of the R [`here`](https://here.r-lib.org/) package.
 
-`pyhere` builds paths relative to your project's root, no matter what the
+`py-here` builds paths relative to your project's root, no matter what the
 current working directory is. Stop writing brittle `../../data/x.csv` paths or
 relying on where a script happens to be launched from.
 
 ```python
-from pyhere import here
+from py_here import here
 
 here("data", "penguins.csv")
 # -> /home/me/myproject/data/penguins.csv   (always, from anywhere)
@@ -24,7 +24,9 @@ here("data", "penguins.csv")
 pip install py-here
 ```
 
-The import name is `pyhere`; the distribution name on PyPI is `py-here`.
+The import name is `py_here`; the distribution name on PyPI is `py-here`. (Note:
+an unrelated `pyhere` package by another author already exists on PyPI; this
+project is deliberately distinct in both names.)
 
 For local development, from the project directory:
 
@@ -34,7 +36,7 @@ pip install -e ".[dev]"
 
 ## How it works
 
-On the first call to `here()`, `pyhere` walks up the directory tree from the
+On the first call to `here()`, `py-here` walks up the directory tree from the
 current working directory until it finds a directory matching one of these
 criteria (in order):
 
@@ -78,7 +80,7 @@ recommended and most robust way to fix the root. Put it near the top of a script
 or notebook:
 
 ```python
-from pyhere import i_am, here
+from py_here import i_am, here
 i_am("analysis/report.py")
 
 here("data", "penguins.csv")
@@ -110,7 +112,7 @@ Build criteria with `has_file`, `has_dir`, `has_glob`; a directory matches if it
 satisfies any of them:
 
 ```python
-from pyhere import find_root, has_file, has_dir
+from py_here import find_root, has_file, has_dir
 
 find_root(has_file("Makefile"), has_dir(".git"))
 ```
@@ -121,7 +123,7 @@ Customise what counts as a project root for the whole session. Useful for
 organisations with their own markers:
 
 ```python
-from pyhere import set_criteria, has_file, has_dir
+from py_here import set_criteria, has_file, has_dir
 
 set_criteria(has_file("company_project.json"), has_dir("src"))
 # ... here() now uses these markers
@@ -133,7 +135,7 @@ reset_criteria()  # back to the built-in defaults
 Temporarily pin the root, restoring the previous state on exit. Ideal in tests:
 
 ```python
-from pyhere import using_root, here
+from py_here import using_root, here
 
 with using_root(tmp_path):
     assert here("data") == tmp_path / "data"
@@ -179,9 +181,9 @@ here() starts at /home/me/myproject
 - Current working directory: /home/me/myproject/analysis
 ```
 
-## When not to use pyhere
+## When not to use py-here
 
-`pyhere` is for scripts, notebooks and analyses: code run from within a project
+`py-here` is for scripts, notebooks and analyses: code run from within a project
 tree. It is not meant for use inside an installed library, because once a package
 is installed the source layout no longer exists. To access data bundled with an
 installed package, use [`importlib.resources`](https://docs.python.org/3/library/importlib.resources.html)
@@ -198,17 +200,17 @@ instead.
 
 ## Command line
 
-Installing the package also provides a `pyhere` command, handy in shell scripts
+Installing the package also provides a `py-here` command, handy in shell scripts
 and Makefiles:
 
 ```bash
-pyhere                      # print the project root
-pyhere data penguins.csv    # print root/data/penguins.csv
-pyhere --report             # situation report (why this root?)
-pyhere --version
+py-here                      # print the project root
+py-here data penguins.csv    # print root/data/penguins.csv
+py-here --report             # situation report (why this root?)
+py-here --version
 
 # e.g. anchor a command at the project root from any subdirectory:
-cat "$(pyhere data/penguins.csv)"
+cat "$(py-here data/penguins.csv)"
 ```
 
 ## Development

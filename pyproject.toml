@@ -26,7 +26,7 @@ dependencies = []
 dev = ["pytest>=7", "pytest-cov>=4", "ruff>=0.5", "mypy>=1.10"]
 
 [project.scripts]
-pyhere = "pyhere.__main__:main"
+py-here = "py_here.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/katendepinto/py-here"
@@ -39,7 +39,7 @@ Changelog = "https://github.com/katendepinto/py-here/blob/main/CHANGELOG.md"
 where = ["src"]
 
 [tool.setuptools.package-data]
-pyhere = ["py.typed"]
+py_here = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -47,7 +47,7 @@ addopts = "-ra"
 
 [tool.coverage.run]
 branch = true
-source = ["pyhere"]
+source = ["py_here"]
 
 [tool.coverage.report]
 show_missing = true

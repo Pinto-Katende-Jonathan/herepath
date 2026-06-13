@@ -1,4 +1,4 @@
-"""Core implementation of :mod:`pyhere`.
+"""Core implementation of :mod:`py_here`.
 
 A Python port of the R `here` package (https://here.r-lib.org/).
 
@@ -13,7 +13,7 @@ via the ``PYHERE_ROOT`` environment variable, or searched for with arbitrary
 criteria via :func:`find_root`.
 
 .. note::
-   ``pyhere`` is meant for scripts, notebooks and analyses -- code run from
+   ``py_here`` is meant for scripts, notebooks and analyses -- code run from
    within a project tree. It is **not** meant for use inside an *installed*
    library: there, the source layout no longer exists, so use
    :mod:`importlib.resources` to access packaged data instead.
@@ -51,7 +51,7 @@ PathLike = Union[str, Path]
 
 # Guards the module-global root/criteria state. An RLock (re-entrant) is used
 # because some public functions call others that re-acquire it (e.g. i_am ->
-# dr_here -> _ensure_root). pyhere is built for scripts and notebooks, not heavy
+# dr_here -> _ensure_root). py_here is built for scripts and notebooks, not heavy
 # concurrency, but this prevents torn reads if reset()/i_am() race with here().
 _lock = threading.RLock()
 
@@ -135,7 +135,7 @@ def set_criteria(*criteria: Criterion) -> None:
 
     Useful for organisations with their own root markers, e.g.::
 
-        from pyhere import set_criteria, has_file, has_dir
+        from py_here import set_criteria, has_file, has_dir
         set_criteria(has_file("company_project.json"), has_dir("src"))
 
     This clears any cached root so the new criteria take effect immediately.
@@ -509,7 +509,7 @@ def find_root(*criteria: Criterion, start: PathLike = ".") -> Path:
 
     Examples
     --------
-    >>> from pyhere import find_root, has_file, has_dir
+    >>> from py_here import find_root, has_file, has_dir
     >>> find_root(has_file("Makefile"), has_dir(".git"))  # doctest: +SKIP
     PosixPath('/home/me/myproject')
     """

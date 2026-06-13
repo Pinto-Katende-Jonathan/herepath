@@ -1,9 +1,9 @@
-"""Tests for the pyhere command-line interface."""
+"""Tests for the py_here command-line interface."""
 
 import pytest
 
-from pyhere import __main__ as cli
-from pyhere import _core
+from py_here import __main__ as cli
+from py_here import _core
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +50,7 @@ def test_cli_report_quiet(tmp_path, capsys):
 
 def test_cli_reports_error_cleanly(tmp_path, capsys, monkeypatch):
     # A misconfigured PYHERE_ROOT must yield a clean error + exit 1, not a
-    # traceback (so `ROOT="$(pyhere)"` fails predictably).
+    # traceback (so `ROOT="$(py-here)"` fails predictably).
     monkeypatch.setenv(_core.ENV_VAR, str(tmp_path / "missing"))
     rc = cli.main([])
     assert rc == 1
@@ -64,4 +64,4 @@ def test_cli_version(capsys):
         cli.main(["--version"])
     assert exc.value.code == 0
     out = capsys.readouterr().out
-    assert "pyhere" in out
+    assert "py-here" in out

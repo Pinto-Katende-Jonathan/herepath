@@ -1,19 +1,19 @@
-"""Command-line interface for pyhere.
+"""Command-line interface for py_here.
 
 Examples
 --------
 Print the project root::
 
-    $ pyhere
+    $ py-here
     /home/me/myproject
 
 Build a project-relative path (handy in shell scripts)::
 
-    $ cat "$(pyhere data penguins.csv)"
+    $ cat "$(py-here data penguins.csv)"
 
 Show the situation report explaining where the root is and why::
 
-    $ pyhere --report
+    $ py-here --report
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from ._core import dr_here, here
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="pyhere",
+        prog="py-here",
         description="Print paths relative to your project root.",
     )
     parser.add_argument(
@@ -61,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Top-level guard: a CLI should print a clean one-line error and exit 1
     # (e.g. a misconfigured PYHERE_ROOT), not dump a traceback -- important for
-    # shell capture like `ROOT="$(pyhere)"`.
+    # shell capture like `ROOT="$(py-here)"`.
     try:
         if args.report:
             dr_here(show_reason=not args.quiet_report)

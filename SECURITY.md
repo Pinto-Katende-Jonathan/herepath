@@ -12,6 +12,6 @@ Instead, use GitHub's private vulnerability reporting (the "Security" tab, then
 "Report a vulnerability") or email katendepinto@gmail.com.
 
 We aim to acknowledge reports within 7 days and to provide a fix or mitigation
-timeline after triage. `pyhere` only touches the local filesystem and has no
+timeline after triage. `py-here` only touches the local filesystem and has no
 runtime dependencies, so its attack surface is small, but reports are still
 appreciated.

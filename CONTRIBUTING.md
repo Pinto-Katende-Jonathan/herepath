@@ -1,4 +1,4 @@
-# Contributing to pyhere
+# Contributing to py-here
 
 Thanks for taking the time to contribute. This project is small and friendly;
 contributions of all sizes are welcome: bug reports, docs, tests, and code.
@@ -37,7 +37,7 @@ Linux, macOS and Windows. Please make sure they pass locally first.
 
 ## Design philosophy
 
-`pyhere` deliberately mirrors the small, restricted surface of the R
+`py-here` deliberately mirrors the small, restricted surface of the R
 [`here`](https://here.r-lib.org/) package. Before adding a new public function,
 consider whether it fits that minimal philosophy. More powerful root-finding
 belongs in user code or a separate library.
@@ -45,7 +45,7 @@ belongs in user code or a separate library.
 ## Reporting bugs
 
 Open an issue using the bug-report template and include the output of
-`pyhere --report` so we can see how the root was resolved.
+`py-here --report` so we can see how the root was resolved.
 
 ## Code of Conduct
 

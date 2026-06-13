@@ -23,7 +23,7 @@ All notable changes to this project are documented here. The format is based on
 ### Fixed
 - CLI now prints a clean one-line `Error: ...` to stderr and exits 1 on failure
   (e.g. a misconfigured `PYHERE_ROOT`) instead of dumping a traceback, so shell
-  capture like `ROOT="$(pyhere)"` fails predictably.
+  capture like `ROOT="$(py-here)"` fails predictably.
 - `i_am()` now pins the root under the shared lock (atomic search-and-set),
   consistent with `reset()` and auto-detection.
 - `using_root()` documents that it saves/restores the process-global root and is
@@ -54,6 +54,6 @@ package.
   (`pyproject.toml`, `setup.py`/`.cfg`, `requirements.txt`, `Pipfile`,
   `poetry.lock`, `environment.yml`), editors (`.vscode`, `.idea`, `*.Rproj`,
   `_quarto.yml`), and VCS roots (`.git`, `.hg`, `.svn`).
-- `pyhere` command-line interface (`pyhere`, `pyhere <paths>`, `--report`,
+- `py-here` command-line interface (`py-here`, `py-here <paths>`, `--report`,
   `--version`).
 - PEP 561 typing support (`py.typed`).

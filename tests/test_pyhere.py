@@ -81,6 +81,22 @@ def test_git_marker_as_file_worktree(tmp_path):
     assert pyhere.here() == tmp_path.resolve()
 
 
+def test_symlinked_subdir_not_resolved_in_result(tmp_path):
+    # Regression: only the root is resolve()d; a symlinked component in the
+    # result (e.g. `data -> /mnt/shared/data`) must be kept as project/data,
+    # not rewritten to its target. (Skips where symlinks aren't permitted.)
+    _touch(tmp_path / ".here")
+    external = tmp_path / "external_target"
+    external.mkdir()
+    link = tmp_path / "data"
+    try:
+        link.symlink_to(external, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlink creation not permitted on this platform")
+    assert pyhere.here("data") == tmp_path.resolve() / "data"
+    assert pyhere.here("data") != external.resolve()
+
+
 # --- i_am() ---------------------------------------------------------------
 
 

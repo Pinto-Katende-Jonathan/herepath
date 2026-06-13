@@ -41,12 +41,16 @@ criteria (in order):
 | Category      | Markers |
 |---------------|---------|
 | Explicit      | `.here` |
-| Python        | `pyproject.toml`, `setup.py`, `setup.cfg`, `requirements.txt`, `Pipfile`, `poetry.lock`, `environment.yml` |
+| Python        | `pyproject.toml`, `setup.py`, `setup.cfg`, `Pipfile`, `poetry.lock`, `environment.yml` |
 | Editors       | `.vscode/`, `.idea/`, `*.Rproj`, `_quarto.yml` |
 | Version control | `.git`, `.hg/`, `.svn/` |
 
-That directory becomes the project root. If nothing matches, the current
-working directory is used as a fallback.
+The **closest** matching ancestor wins (so a sub-package in a monorepo resolves
+to its own directory). If nothing matches, the current working directory is used
+as a fallback. `requirements.txt` is deliberately **not** a marker: it is too
+often duplicated in subdirectories (`docs/`, `tests/`), which would anchor the
+root in the wrong place. Override the criteria with
+[`set_criteria()`](#set_criteriacriteria--reset_criteria) if you need to.
 
 ## API
 
@@ -109,6 +113,45 @@ satisfies **any** of them:
 from pyhere import find_root, has_file, has_dir
 
 find_root(has_file("Makefile"), has_dir(".git"))
+```
+
+### `set_criteria(*criteria)` / `reset_criteria()`
+
+Customise what counts as a project root for the whole session — useful for
+organisations with their own markers:
+
+```python
+from pyhere import set_criteria, has_file, has_dir
+
+set_criteria(has_file("company_project.json"), has_dir("src"))
+# ... here() now uses these markers
+reset_criteria()  # back to the built-in defaults
+```
+
+### `using_root(path)` context manager
+
+Temporarily pin the root, restoring the previous state on exit. Ideal in tests:
+
+```python
+from pyhere import using_root, here
+
+with using_root(tmp_path):
+    assert here("data") == tmp_path / "data"
+# previous root (or auto-detection) restored here
+```
+
+### Debugging detection: `dr_here(trace=True)`
+
+When the wrong root is picked, `trace=True` prints the full upward search:
+
+```
+Searching from:
+  /project/notebooks
+Checking:
+  /project/notebooks
+  /project   <- contains a file `pyproject.toml`
+Matched:
+  /project
 ```
 
 ### Forcing the root with `PYHERE_ROOT`

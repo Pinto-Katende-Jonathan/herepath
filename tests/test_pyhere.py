@@ -14,8 +14,9 @@ def reset_state(monkeypatch, tmp_path):
     """Reset the cached root and run each test inside an isolated tmp dir."""
     monkeypatch.delenv(_core.ENV_VAR, raising=False)
     monkeypatch.chdir(tmp_path)
-    pyhere.reset()
+    pyhere.reset_criteria()  # also clears the cached root
     yield
+    pyhere.reset_criteria()
 
 
 def _touch(path: Path) -> Path:
@@ -62,7 +63,7 @@ def test_here_dot_here_marker(tmp_path):
 def test_here_falls_back_to_cwd_when_no_marker(tmp_path, monkeypatch):
     # Force "no criterion matches anywhere" to exercise the fallback path,
     # independent of whatever markers may exist in real ancestor dirs.
-    monkeypatch.setattr(_core, "DEFAULT_CRITERIA", [])
+    monkeypatch.setattr(_core, "_active_criteria", [])
     assert pyhere.here() == tmp_path.resolve()
     assert "no root criteria matched" in _core._state.reason
 
@@ -223,3 +224,91 @@ def test_find_root_does_not_affect_session(tmp_path):
     pyhere.find_root(pyhere.has_file(".here"), start=tmp_path)
     # session root remains uninitialised until here() is called
     assert _core._state.root is None
+
+
+# --- requirements.txt is NOT a root marker (subdir false-positive) --------
+
+
+def test_requirements_txt_is_not_a_root_marker(tmp_path):
+    # The real root has pyproject.toml; docs/ has its own requirements.txt.
+    _touch(tmp_path / "pyproject.toml")
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    _touch(docs / "requirements.txt")
+    os.chdir(docs)
+    # Must walk past docs/ up to the project root, not stop at docs/.
+    assert pyhere.here() == tmp_path.resolve()
+
+
+# --- set_criteria() / reset_criteria() ------------------------------------
+
+
+def test_set_criteria_custom_marker(tmp_path):
+    _touch(tmp_path / "company_project.json")
+    sub = tmp_path / "a"
+    sub.mkdir()
+    os.chdir(sub)
+    pyhere.set_criteria(pyhere.has_file("company_project.json"))
+    assert pyhere.here() == tmp_path.resolve()
+
+
+def test_set_criteria_replaces_defaults(tmp_path):
+    # .here would normally win, but custom criteria replace the defaults
+    _touch(tmp_path / ".here")
+    pyhere.set_criteria(pyhere.has_file("never-present.marker"))
+    # nothing matches -> falls back to cwd
+    assert pyhere.here() == tmp_path.resolve()
+    assert "no root criteria matched" in _core._state.reason
+
+
+def test_set_criteria_requires_argument():
+    with pytest.raises(ValueError):
+        pyhere.set_criteria()
+
+
+def test_reset_criteria_restores_defaults(tmp_path):
+    _touch(tmp_path / ".here")
+    pyhere.set_criteria(pyhere.has_file("nope.marker"))
+    pyhere.reset_criteria()
+    assert pyhere.here() == tmp_path.resolve()
+
+
+# --- using_root() context manager -----------------------------------------
+
+
+def test_using_root_temporary_override(tmp_path):
+    _touch(tmp_path / ".here")
+    assert pyhere.here() == tmp_path.resolve()
+    other = tmp_path / "other"
+    other.mkdir()
+    with pyhere.using_root(other) as root:
+        assert root == other.resolve()
+        assert pyhere.here("data") == (other / "data").resolve()
+    # restored to the previous root
+    assert pyhere.here() == tmp_path.resolve()
+
+
+def test_using_root_restores_uninitialised_state(tmp_path):
+    other = tmp_path / "other"
+    other.mkdir()
+    with pyhere.using_root(other):
+        assert pyhere.here() == other.resolve()
+    # root was uninitialised before the block; it should be again
+    assert _core._state.root is None
+
+
+# --- dr_here(trace=True) --------------------------------------------------
+
+
+def test_dr_here_trace(tmp_path, capsys):
+    _touch(tmp_path / "pyproject.toml")
+    deep = tmp_path / "a" / "b"
+    deep.mkdir(parents=True)
+    os.chdir(deep)
+    pyhere.here()
+    pyhere.dr_here(trace=True)
+    out = capsys.readouterr().out
+    assert "Searching from:" in out
+    assert "Checking:" in out
+    assert "pyproject.toml" in out
+    assert "Matched:" in out

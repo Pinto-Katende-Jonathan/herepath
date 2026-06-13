@@ -22,6 +22,8 @@ criteria via :func:`find_root`.
 from __future__ import annotations
 
 import os
+import threading
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Callable, Iterator, Union
 
@@ -36,6 +38,9 @@ __all__ = [
     "has_dir",
     "has_glob",
     "Criterion",
+    "set_criteria",
+    "reset_criteria",
+    "using_root",
 ]
 
 #: Environment variable that, when set to an existing directory, forces the
@@ -43,6 +48,12 @@ __all__ = [
 ENV_VAR = "PYHERE_ROOT"
 
 PathLike = Union[str, Path]
+
+# Guards the module-global root/criteria state. An RLock (re-entrant) is used
+# because some public functions call others that re-acquire it (e.g. i_am ->
+# dr_here -> _ensure_root). pyhere is built for scripts and notebooks, not heavy
+# concurrency, but this prevents torn reads if reset()/i_am() race with here().
+_lock = threading.RLock()
 
 
 class Criterion:
@@ -91,13 +102,16 @@ def _has_entry(name: str, description: str) -> Criterion:
 
 
 # Ordered list of default criteria, mirroring (and Pythonising) the R package.
+# Note: deliberately *no* `requirements.txt` -- it is commonly duplicated in
+# subdirectories (docs/, tests/, requirements/), which would falsely anchor the
+# root there. Project/lock files and VCS roots are reliable; loose dep lists are
+# not.
 DEFAULT_CRITERIA: list[Criterion] = [
     has_file(".here"),
     # Python project markers
     has_file("pyproject.toml"),
     has_file("setup.py"),
     has_file("setup.cfg"),
-    has_file("requirements.txt"),
     has_file("Pipfile"),
     has_file("poetry.lock"),
     has_file("environment.yml"),
@@ -111,6 +125,37 @@ DEFAULT_CRITERIA: list[Criterion] = [
     has_dir(".hg"),
     has_dir(".svn"),
 ]
+
+# The criteria actually used by auto-detection; swappable via set_criteria().
+_active_criteria: list[Criterion] = list(DEFAULT_CRITERIA)
+
+
+def set_criteria(*criteria: Criterion) -> None:
+    """Replace the criteria used by auto-detection for this session.
+
+    Useful for organisations with their own root markers, e.g.::
+
+        from pyhere import set_criteria, has_file, has_dir
+        set_criteria(has_file("company_project.json"), has_dir("src"))
+
+    This clears any cached root so the new criteria take effect immediately.
+    Built-in markers are not kept unless you include them. Call
+    :func:`reset_criteria` to restore the defaults.
+    """
+    global _active_criteria
+    with _lock:
+        if not criteria:
+            raise ValueError("set_criteria() requires at least one criterion.")
+        _active_criteria = list(criteria)
+        reset()
+
+
+def reset_criteria() -> None:
+    """Restore the default auto-detection criteria and clear the cached root."""
+    global _active_criteria
+    with _lock:
+        _active_criteria = list(DEFAULT_CRITERIA)
+        reset()
 
 
 class _RootState:
@@ -159,25 +204,26 @@ def _root_from_env() -> Path | None:
 
 
 def _ensure_root() -> None:
-    if _state.root is not None:
-        return
+    with _lock:
+        if _state.root is not None:
+            return
 
-    env_root = _root_from_env()
-    if env_root is not None:
-        _state.set(env_root, f"is set via the {ENV_VAR} environment variable", declared=False)
-        return
+        env_root = _root_from_env()
+        if env_root is not None:
+            _state.set(env_root, f"is set via the {ENV_VAR} environment variable", declared=False)
+            return
 
-    start = Path.cwd()
-    root, reason = _find_root(start, DEFAULT_CRITERIA)
-    if root is None:
-        _state.set(
-            start,
-            "is the initial working directory (no root criteria matched)",
-            declared=False,
-        )
-    else:
-        assert reason is not None  # found together with root
-        _state.set(root, reason, declared=False)
+        start = Path.cwd()
+        root, reason = _find_root(start, _active_criteria)
+        if root is None:
+            _state.set(
+                start,
+                "is the initial working directory (no root criteria matched)",
+                declared=False,
+            )
+        else:
+            assert reason is not None  # found together with root
+            _state.set(root, reason, declared=False)
 
 
 def reset() -> None:
@@ -187,10 +233,43 @@ def reset() -> None:
     files or changing the working directory) and in tests. The next call to
     :func:`here` re-runs detection from scratch.
     """
-    _state.root = None
-    _state.wd = None
-    _state.reason = None
-    _state.declared = False
+    with _lock:
+        _state.root = None
+        _state.wd = None
+        _state.reason = None
+        _state.declared = False
+
+
+@contextmanager
+def using_root(path: PathLike) -> Iterator[Path]:
+    """Temporarily pin the project root to ``path``, restoring it on exit.
+
+    Primarily for tests and notebooks::
+
+        with using_root(tmp_path):
+            assert here("data") == tmp_path / "data"
+        # previous root (or auto-detection) restored here
+
+    Parameters
+    ----------
+    path:
+        Directory to use as the project root for the duration of the block.
+
+    Yields
+    ------
+    pathlib.Path
+        The resolved root in effect inside the block.
+    """
+    with _lock:
+        saved = (_state.root, _state.wd, _state.reason, _state.declared)
+        _state.set(Path(path), "was set via a `using_root()` block", declared=True)
+        current = _state.root
+    try:
+        assert current is not None
+        yield current
+    finally:
+        with _lock:
+            _state.root, _state.wd, _state.reason, _state.declared = saved
 
 
 def _file_contains(path: Path, needle: str, n: int = 100) -> bool:
@@ -337,13 +416,36 @@ def set_here(path: PathLike = ".", verbose: bool = True) -> Path:
     return file_path
 
 
-def dr_here(show_reason: bool = True) -> None:
+def _format_trace(start: Path) -> str:
+    """Render the upward search, showing which directory matched (debugging)."""
+    lines = [f"Searching from:\n  {start.resolve()}", "Checking:"]
+    matched: str | None = None
+    for directory in _ancestors(start):
+        hit = next((c for c in _active_criteria if c.test(directory)), None)
+        marker = f"  {directory}"
+        if hit is not None:
+            lines.append(f"{marker}   <- {hit.description}")
+            matched = str(directory)
+            break
+        lines.append(marker)
+    if matched is None:
+        lines.append("Matched:\n  (nothing -- fell back to the working directory)")
+    else:
+        lines.append(f"Matched:\n  {matched}")
+    return "\n".join(lines)
+
+
+def dr_here(show_reason: bool = True, trace: bool = False) -> None:
     """Print a situation report explaining where the project root is and why.
 
     Parameters
     ----------
     show_reason:
         Include the reason and working-directory details. Defaults to True.
+    trace:
+        Also print the full upward search (every directory checked and what
+        matched). Invaluable when auto-detection picks an unexpected root.
+        Defaults to False.
     """
     _ensure_root()
     assert _state.root is not None
@@ -356,6 +458,8 @@ def dr_here(show_reason: bool = True) -> None:
         )
     else:
         message = f"here() starts at {_state.root}"
+    if trace:
+        message += "\n\n" + _format_trace(_state.wd or Path.cwd())
     print(message)
 
 
@@ -392,7 +496,7 @@ def find_root(*criteria: Criterion, start: PathLike = ".") -> Path:
     >>> find_root(has_file("Makefile"), has_dir(".git"))  # doctest: +SKIP
     PosixPath('/home/me/myproject')
     """
-    crits = list(criteria) if criteria else DEFAULT_CRITERIA
+    crits = list(criteria) if criteria else _active_criteria
     start_path = Path(start)
     root, _ = _find_root(start_path, crits)
     if root is None:

@@ -10,7 +10,7 @@ from pyhere import _core
 def reset_state(monkeypatch, tmp_path):
     monkeypatch.delenv(_core.ENV_VAR, raising=False)
     monkeypatch.chdir(tmp_path)
-    _core.reset()
+    _core.reset_criteria()
     yield
 
 

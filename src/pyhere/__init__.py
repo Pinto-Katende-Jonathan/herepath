@@ -18,7 +18,10 @@ from ._core import (
     here,
     i_am,
     reset,
+    reset_criteria,
+    set_criteria,
     set_here,
+    using_root,
 )
 
 __all__ = [
@@ -32,5 +35,8 @@ __all__ = [
     "has_dir",
     "has_glob",
     "Criterion",
+    "set_criteria",
+    "reset_criteria",
+    "using_root",
 ]
 __version__ = "0.1.0"

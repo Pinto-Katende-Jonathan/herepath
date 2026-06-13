@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an idea for pyhere
+description: Suggest an idea for herepath
 labels: ["enhancement"]
 body:
   - type: textarea
@@ -19,5 +19,5 @@ body:
   - type: markdown
     attributes:
       value: >
-        Note: pyhere intentionally keeps a small surface mirroring the R `here`
+        Note: herepath intentionally keeps a small surface mirroring the R `here`
         package. More powerful root-finding may be better suited to user code.

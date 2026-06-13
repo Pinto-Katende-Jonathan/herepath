@@ -22,8 +22,8 @@ All notable changes to this project are documented here. The format is based on
 
 ### Fixed
 - CLI now prints a clean one-line `Error: ...` to stderr and exits 1 on failure
-  (e.g. a misconfigured `PYHERE_ROOT`) instead of dumping a traceback, so shell
-  capture like `ROOT="$(py-here)"` fails predictably.
+  (e.g. a misconfigured `HEREPATH_ROOT`) instead of dumping a traceback, so shell
+  capture like `ROOT="$(herepath)"` fails predictably.
 - `i_am()` now pins the root under the shared lock (atomic search-and-set),
   consistent with `reset()` and auto-detection.
 - `using_root()` documents that it saves/restores the process-global root and is
@@ -48,12 +48,12 @@ package.
 - `find_root(*criteria, start=".")` plus `has_file`, `has_dir`, `has_glob`
   criterion builders and the `Criterion` class: a lower-level escape hatch for
   custom root markers, in the spirit of `rprojroot::find_root`.
-- `PYHERE_ROOT` environment variable to force the project root (Docker / CI /
+- `HEREPATH_ROOT` environment variable to force the project root (Docker / CI /
   deployment). Raises `ValueError` if it does not point to a directory.
 - Root detection via ordered criteria: `.here`, Python project files
   (`pyproject.toml`, `setup.py`/`.cfg`, `requirements.txt`, `Pipfile`,
   `poetry.lock`, `environment.yml`), editors (`.vscode`, `.idea`, `*.Rproj`,
   `_quarto.yml`), and VCS roots (`.git`, `.hg`, `.svn`).
-- `py-here` command-line interface (`py-here`, `py-here <paths>`, `--report`,
+- `herepath` command-line interface (`herepath`, `herepath <paths>`, `--report`,
   `--version`).
 - PEP 561 typing support (`py.typed`).

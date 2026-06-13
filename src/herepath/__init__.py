@@ -1,9 +1,9 @@
-"""py_here -- A simpler way to find your files.
+"""herepath -- A simpler way to find your files.
 
 A Python port of the R `here` package. Construct paths relative to your
 project's root, no matter the current working directory.
 
-    >>> from py_here import here, i_am
+    >>> from herepath import here, i_am
     >>> i_am("analysis/report.py")        # declare where this script lives
     >>> here("data", "penguins.csv")      # -> <project root>/data/penguins.csv
 """

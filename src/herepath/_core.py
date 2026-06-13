@@ -1,4 +1,4 @@
-"""Core implementation of :mod:`py_here`.
+"""Core implementation of :mod:`herepath`.
 
 A Python port of the R `here` package (https://here.r-lib.org/).
 
@@ -9,11 +9,11 @@ directory, ...). Once found, :func:`here` builds paths relative to that root,
 acting as a drop-in replacement for :func:`os.path.join`.
 
 The root can also be declared explicitly and robustly with :func:`i_am`, forced
-via the ``PYHERE_ROOT`` environment variable, or searched for with arbitrary
+via the ``HEREPATH_ROOT`` environment variable, or searched for with arbitrary
 criteria via :func:`find_root`.
 
 .. note::
-   ``py_here`` is meant for scripts, notebooks and analyses -- code run from
+   ``herepath`` is meant for scripts, notebooks and analyses -- code run from
    within a project tree. It is **not** meant for use inside an *installed*
    library: there, the source layout no longer exists, so use
    :mod:`importlib.resources` to access packaged data instead.
@@ -45,13 +45,13 @@ __all__ = [
 
 #: Environment variable that, when set to an existing directory, forces the
 #: project root used by auto-detection (Docker / CI / deployment escape hatch).
-ENV_VAR = "PYHERE_ROOT"
+ENV_VAR = "HEREPATH_ROOT"
 
 PathLike = Union[str, Path]
 
 # Guards the module-global root/criteria state. An RLock (re-entrant) is used
 # because some public functions call others that re-acquire it (e.g. i_am ->
-# dr_here -> _ensure_root). py_here is built for scripts and notebooks, not heavy
+# dr_here -> _ensure_root). herepath is built for scripts and notebooks, not heavy
 # concurrency, but this prevents torn reads if reset()/i_am() race with here().
 _lock = threading.RLock()
 
@@ -135,7 +135,7 @@ def set_criteria(*criteria: Criterion) -> None:
 
     Useful for organisations with their own root markers, e.g.::
 
-        from py_here import set_criteria, has_file, has_dir
+        from herepath import set_criteria, has_file, has_dir
         set_criteria(has_file("company_project.json"), has_dir("src"))
 
     This clears any cached root so the new criteria take effect immediately.
@@ -193,7 +193,7 @@ def _find_root(start: Path, criteria: list[Criterion]) -> tuple[Path | None, str
 
 
 def _root_from_env() -> Path | None:
-    """Return the root forced via ``PYHERE_ROOT``, validating it if set."""
+    """Return the root forced via ``HEREPATH_ROOT``, validating it if set."""
     value = os.environ.get(ENV_VAR)
     if not value:
         return None
@@ -509,7 +509,7 @@ def find_root(*criteria: Criterion, start: PathLike = ".") -> Path:
 
     Examples
     --------
-    >>> from py_here import find_root, has_file, has_dir
+    >>> from herepath import find_root, has_file, has_dir
     >>> find_root(has_file("Makefile"), has_dir(".git"))  # doctest: +SKIP
     PosixPath('/home/me/myproject')
     """

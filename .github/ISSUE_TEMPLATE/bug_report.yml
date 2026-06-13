@@ -23,8 +23,8 @@ body:
   - type: textarea
     id: report
     attributes:
-      label: Output of `pyhere --report`
-      description: Run `pyhere --report` (or `pyhere.dr_here()`) and paste the output.
+      label: Output of `herepath --report`
+      description: Run `herepath --report` (or `herepath.dr_here()`) and paste the output.
       render: text
     validations:
       required: false
@@ -32,7 +32,7 @@ body:
     id: versions
     attributes:
       label: Versions
-      description: pyhere version, Python version, and OS.
-      placeholder: "pyhere 0.1.0, Python 3.12, Windows 11"
+      description: herepath version, Python version, and OS.
+      placeholder: "herepath 0.1.0, Python 3.12, Windows 11"
     validations:
       required: true

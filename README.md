@@ -1,18 +1,18 @@
-# py-here
+# herepath
 
-[![CI](https://github.com/katendepinto/py-here/actions/workflows/ci.yml/badge.svg)](https://github.com/katendepinto/py-here/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/py-here.svg)](https://pypi.org/project/py-here/)
-[![Python versions](https://img.shields.io/pypi/pyversions/py-here.svg)](https://pypi.org/project/py-here/)
+[![CI](https://github.com/katendepinto/herepath/actions/workflows/ci.yml/badge.svg)](https://github.com/katendepinto/herepath/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/herepath.svg)](https://pypi.org/project/herepath/)
+[![Python versions](https://img.shields.io/pypi/pyversions/herepath.svg)](https://pypi.org/project/herepath/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A simpler way to find your files. A Python port of the R [`here`](https://here.r-lib.org/) package.
 
-`py-here` builds paths relative to your project's root, no matter what the
+`herepath` builds paths relative to your project's root, no matter what the
 current working directory is. Stop writing brittle `../../data/x.csv` paths or
 relying on where a script happens to be launched from.
 
 ```python
-from py_here import here
+from herepath import here
 
 here("data", "penguins.csv")
 # -> /home/me/myproject/data/penguins.csv   (always, from anywhere)
@@ -21,12 +21,12 @@ here("data", "penguins.csv")
 ## Installation
 
 ```bash
-pip install py-here
+pip install herepath
 ```
 
-The import name is `py_here`; the distribution name on PyPI is `py-here`. (Note:
-an unrelated `pyhere` package by another author already exists on PyPI; this
-project is deliberately distinct in both names.)
+One name everywhere: `pip install herepath`, `import herepath`, and a `herepath`
+command. (An unrelated `pyhere` package by another author exists on PyPI;
+`herepath` is deliberately named to avoid any confusion with it.)
 
 For local development, from the project directory:
 
@@ -36,7 +36,7 @@ pip install -e ".[dev]"
 
 ## How it works
 
-On the first call to `here()`, `py-here` walks up the directory tree from the
+On the first call to `here()`, `herepath` walks up the directory tree from the
 current working directory until it finds a directory matching one of these
 criteria (in order):
 
@@ -80,7 +80,7 @@ recommended and most robust way to fix the root. Put it near the top of a script
 or notebook:
 
 ```python
-from py_here import i_am, here
+from herepath import i_am, here
 i_am("analysis/report.py")
 
 here("data", "penguins.csv")
@@ -112,7 +112,7 @@ Build criteria with `has_file`, `has_dir`, `has_glob`; a directory matches if it
 satisfies any of them:
 
 ```python
-from py_here import find_root, has_file, has_dir
+from herepath import find_root, has_file, has_dir
 
 find_root(has_file("Makefile"), has_dir(".git"))
 ```
@@ -123,7 +123,7 @@ Customise what counts as a project root for the whole session. Useful for
 organisations with their own markers:
 
 ```python
-from py_here import set_criteria, has_file, has_dir
+from herepath import set_criteria, has_file, has_dir
 
 set_criteria(has_file("company_project.json"), has_dir("src"))
 # ... here() now uses these markers
@@ -135,7 +135,7 @@ reset_criteria()  # back to the built-in defaults
 Temporarily pin the root, restoring the previous state on exit. Ideal in tests:
 
 ```python
-from py_here import using_root, here
+from herepath import using_root, here
 
 with using_root(tmp_path):
     assert here("data") == tmp_path / "data"
@@ -156,14 +156,14 @@ Matched:
   /project
 ```
 
-### Forcing the root with `PYHERE_ROOT`
+### Forcing the root with `HEREPATH_ROOT`
 
-Set the `PYHERE_ROOT` environment variable to an existing directory to override
+Set the `HEREPATH_ROOT` environment variable to an existing directory to override
 auto-detection entirely. This is the recommended escape hatch for Docker, CI,
 and deployment, where the heuristics may not apply:
 
 ```bash
-PYHERE_ROOT=/app python analysis/report.py
+HEREPATH_ROOT=/app python analysis/report.py
 ```
 
 If it points to a path that isn't a directory, `here()` raises `ValueError` so
@@ -181,9 +181,9 @@ here() starts at /home/me/myproject
 - Current working directory: /home/me/myproject/analysis
 ```
 
-## When not to use py-here
+## When not to use herepath
 
-`py-here` is for scripts, notebooks and analyses: code run from within a project
+`herepath` is for scripts, notebooks and analyses: code run from within a project
 tree. It is not meant for use inside an installed library, because once a package
 is installed the source layout no longer exists. To access data bundled with an
 installed package, use [`importlib.resources`](https://docs.python.org/3/library/importlib.resources.html)
@@ -200,17 +200,17 @@ instead.
 
 ## Command line
 
-Installing the package also provides a `py-here` command, handy in shell scripts
+Installing the package also provides a `herepath` command, handy in shell scripts
 and Makefiles:
 
 ```bash
-py-here                      # print the project root
-py-here data penguins.csv    # print root/data/penguins.csv
-py-here --report             # situation report (why this root?)
-py-here --version
+herepath                      # print the project root
+herepath data penguins.csv    # print root/data/penguins.csv
+herepath --report             # situation report (why this root?)
+herepath --version
 
 # e.g. anchor a command at the project root from any subdirectory:
-cat "$(py-here data/penguins.csv)"
+cat "$(herepath data/penguins.csv)"
 ```
 
 ## Development

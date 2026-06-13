@@ -8,15 +8,39 @@ current working directory until a directory matching one of a set of
 directory, ...). Once found, :func:`here` builds paths relative to that root,
 acting as a drop-in replacement for :func:`os.path.join`.
 
-The root can also be declared explicitly and robustly with :func:`i_am`.
+The root can also be declared explicitly and robustly with :func:`i_am`, forced
+via the ``PYHERE_ROOT`` environment variable, or searched for with arbitrary
+criteria via :func:`find_root`.
+
+.. note::
+   ``pyhere`` is meant for scripts, notebooks and analyses -- code run from
+   within a project tree. It is **not** meant for use inside an *installed*
+   library: there, the source layout no longer exists, so use
+   :mod:`importlib.resources` to access packaged data instead.
 """
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Callable, Iterator, Union
 
-__all__ = ["here", "i_am", "set_here", "dr_here"]
+__all__ = [
+    "here",
+    "i_am",
+    "set_here",
+    "dr_here",
+    "reset",
+    "find_root",
+    "has_file",
+    "has_dir",
+    "has_glob",
+    "Criterion",
+]
+
+#: Environment variable that, when set to an existing directory, forces the
+#: project root used by auto-detection (Docker / CI / deployment escape hatch).
+ENV_VAR = "PYHERE_ROOT"
 
 PathLike = Union[str, Path]
 
@@ -38,17 +62,27 @@ class Criterion:
         return f"Criterion({self.description!r})"
 
 
-def _has_file(name: str) -> Criterion:
+def has_file(name: str) -> Criterion:
+    """A criterion that matches a directory containing a file named ``name``."""
     return Criterion(
         f"contains a file `{name}`",
         lambda d: (d / name).is_file(),
     )
 
 
-def _has_dir(name: str) -> Criterion:
+def has_dir(name: str) -> Criterion:
+    """A criterion that matches a directory containing a subdirectory ``name``."""
     return Criterion(
         f"contains a directory `{name}`",
         lambda d: (d / name).is_dir(),
+    )
+
+
+def has_glob(pattern: str) -> Criterion:
+    """A criterion that matches a directory containing a file matching ``pattern``."""
+    return Criterion(
+        f"contains a file matching `{pattern}`",
+        lambda d: any(d.glob(pattern)),
     )
 
 
@@ -56,33 +90,26 @@ def _has_entry(name: str, description: str) -> Criterion:
     return Criterion(description, lambda d: (d / name).exists())
 
 
-def _has_glob(pattern: str) -> Criterion:
-    return Criterion(
-        f"contains a file matching `{pattern}`",
-        lambda d: any(d.glob(pattern)),
-    )
-
-
 # Ordered list of default criteria, mirroring (and Pythonising) the R package.
 DEFAULT_CRITERIA: list[Criterion] = [
-    _has_file(".here"),
+    has_file(".here"),
     # Python project markers
-    _has_file("pyproject.toml"),
-    _has_file("setup.py"),
-    _has_file("setup.cfg"),
-    _has_file("requirements.txt"),
-    _has_file("Pipfile"),
-    _has_file("poetry.lock"),
-    _has_file("environment.yml"),
+    has_file("pyproject.toml"),
+    has_file("setup.py"),
+    has_file("setup.cfg"),
+    has_file("requirements.txt"),
+    has_file("Pipfile"),
+    has_file("poetry.lock"),
+    has_file("environment.yml"),
     # Editors / IDEs / other project systems
-    _has_dir(".vscode"),
-    _has_dir(".idea"),
-    _has_glob("*.Rproj"),
-    _has_file("_quarto.yml"),
+    has_dir(".vscode"),
+    has_dir(".idea"),
+    has_glob("*.Rproj"),
+    has_file("_quarto.yml"),
     # Version control roots (a `.git` worktree may be a file, not a directory)
     _has_entry(".git", "contains a `.git` directory or file (Git root)"),
-    _has_dir(".hg"),
-    _has_dir(".svn"),
+    has_dir(".hg"),
+    has_dir(".svn"),
 ]
 
 
@@ -120,9 +147,26 @@ def _find_root(start: Path, criteria: list[Criterion]) -> tuple[Path | None, str
     return None, None
 
 
+def _root_from_env() -> Path | None:
+    """Return the root forced via ``PYHERE_ROOT``, validating it if set."""
+    value = os.environ.get(ENV_VAR)
+    if not value:
+        return None
+    path = Path(value).expanduser()
+    if not path.is_dir():
+        raise ValueError(f"{ENV_VAR} is set to {value!r}, which is not an existing directory.")
+    return path
+
+
 def _ensure_root() -> None:
     if _state.root is not None:
         return
+
+    env_root = _root_from_env()
+    if env_root is not None:
+        _state.set(env_root, f"is set via the {ENV_VAR} environment variable", declared=False)
+        return
+
     start = Path.cwd()
     root, reason = _find_root(start, DEFAULT_CRITERIA)
     if root is None:
@@ -134,6 +178,19 @@ def _ensure_root() -> None:
     else:
         assert reason is not None  # found together with root
         _state.set(root, reason, declared=False)
+
+
+def reset() -> None:
+    """Forget the cached project root so it is re-detected on the next call.
+
+    Useful in long-lived sessions such as Jupyter notebooks (e.g. after moving
+    files or changing the working directory) and in tests. The next call to
+    :func:`here` re-runs detection from scratch.
+    """
+    _state.root = None
+    _state.wd = None
+    _state.reason = None
+    _state.declared = False
 
 
 def _file_contains(path: Path, needle: str, n: int = 100) -> bool:
@@ -300,3 +357,47 @@ def dr_here(show_reason: bool = True) -> None:
     else:
         message = f"here() starts at {_state.root}"
     print(message)
+
+
+def find_root(*criteria: Criterion, start: PathLike = ".") -> Path:
+    """Search upwards for a directory matching any of the given criteria.
+
+    A lower-level escape hatch for power users who need custom root markers,
+    in the spirit of R's ``rprojroot::find_root``. Unlike :func:`here`, this
+    does not cache anything and does not affect the session root.
+
+    Parameters
+    ----------
+    *criteria:
+        One or more :class:`Criterion` objects (build them with
+        :func:`has_file`, :func:`has_dir`, :func:`has_glob`). A directory
+        matches if it satisfies *any* of them. If none are given, the default
+        criteria are used.
+    start:
+        Directory to start searching from. Defaults to the current directory.
+
+    Returns
+    -------
+    pathlib.Path
+        The first matching ancestor directory.
+
+    Raises
+    ------
+    FileNotFoundError
+        If no ancestor satisfies any criterion.
+
+    Examples
+    --------
+    >>> from pyhere import find_root, has_file, has_dir
+    >>> find_root(has_file("Makefile"), has_dir(".git"))  # doctest: +SKIP
+    PosixPath('/home/me/myproject')
+    """
+    crits = list(criteria) if criteria else DEFAULT_CRITERIA
+    start_path = Path(start)
+    root, _ = _find_root(start_path, crits)
+    if root is None:
+        descriptions = "\n".join(f"  - {c.description}" for c in crits)
+        raise FileNotFoundError(
+            f"No root directory found above {start_path.resolve()} matching any of:\n{descriptions}"
+        )
+    return root

@@ -12,11 +12,9 @@ from pyhere import _core
 @pytest.fixture(autouse=True)
 def reset_state(monkeypatch, tmp_path):
     """Reset the cached root and run each test inside an isolated tmp dir."""
+    monkeypatch.delenv(_core.ENV_VAR, raising=False)
     monkeypatch.chdir(tmp_path)
-    _core._state.root = None
-    _core._state.wd = None
-    _core._state.reason = None
-    _core._state.declared = False
+    pyhere.reset()
     yield
 
 
@@ -156,3 +154,72 @@ def test_dr_here_prints_report(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "here() starts at" in out
     assert "Current working directory" in out
+
+
+# --- PYHERE_ROOT env var --------------------------------------------------
+
+
+def test_env_var_overrides_detection(tmp_path, monkeypatch):
+    forced = tmp_path / "forced"
+    forced.mkdir()
+    _touch(tmp_path / ".here")  # would otherwise win
+    monkeypatch.setenv(_core.ENV_VAR, str(forced))
+    assert pyhere.here() == forced.resolve()
+    assert _core.ENV_VAR in _core._state.reason
+
+
+def test_env_var_invalid_raises(tmp_path, monkeypatch):
+    monkeypatch.setenv(_core.ENV_VAR, str(tmp_path / "does-not-exist"))
+    with pytest.raises(ValueError):
+        pyhere.here()
+
+
+# --- reset() --------------------------------------------------------------
+
+
+def test_reset_redetects_root(tmp_path):
+    _touch(tmp_path / ".here")
+    assert pyhere.here() == tmp_path.resolve()
+    # create a deeper project and move into it; without reset the old root sticks
+    deep = tmp_path / "sub"
+    deep.mkdir()
+    _touch(deep / ".here")
+    os.chdir(deep)
+    assert pyhere.here() == tmp_path.resolve()  # still cached
+    pyhere.reset()
+    assert pyhere.here() == deep.resolve()  # re-detected
+
+
+# --- find_root() ----------------------------------------------------------
+
+
+def test_find_root_custom_criterion(tmp_path):
+    _touch(tmp_path / "Makefile")
+    deep = tmp_path / "a" / "b"
+    deep.mkdir(parents=True)
+    root = pyhere.find_root(pyhere.has_file("Makefile"), start=deep)
+    assert root == tmp_path.resolve()
+
+
+def test_find_root_any_of_multiple(tmp_path):
+    (tmp_path / ".git").mkdir()
+    root = pyhere.find_root(pyhere.has_file("Makefile"), pyhere.has_dir(".git"), start=tmp_path)
+    assert root == tmp_path.resolve()
+
+
+def test_find_root_glob(tmp_path):
+    _touch(tmp_path / "project.toml")
+    root = pyhere.find_root(pyhere.has_glob("*.toml"), start=tmp_path)
+    assert root == tmp_path.resolve()
+
+
+def test_find_root_not_found_raises(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        pyhere.find_root(pyhere.has_file("definitely-absent.xyz"), start=tmp_path)
+
+
+def test_find_root_does_not_affect_session(tmp_path):
+    _touch(tmp_path / ".here")
+    pyhere.find_root(pyhere.has_file(".here"), start=tmp_path)
+    # session root remains uninitialised until here() is called
+    assert _core._state.root is None

@@ -17,8 +17,17 @@ package.
   one-line situation report on success. Optional `uuid` for extra safety.
 - `set_here(path=".", verbose=True)` — create a `.here` marker file.
 - `dr_here(show_reason=True)` — print a situation report explaining the root.
+- `reset()` — forget the cached root so it is re-detected on next use
+  (notebooks, tests).
+- `find_root(*criteria, start=".")` plus `has_file`, `has_dir`, `has_glob`
+  criterion builders and the `Criterion` class — a lower-level escape hatch for
+  custom root markers, in the spirit of `rprojroot::find_root`.
+- `PYHERE_ROOT` environment variable to force the project root (Docker / CI /
+  deployment). Raises `ValueError` if it does not point to a directory.
 - Root detection via ordered criteria: `.here`, Python project files
   (`pyproject.toml`, `setup.py`/`.cfg`, `requirements.txt`, `Pipfile`,
   `poetry.lock`, `environment.yml`), editors (`.vscode`, `.idea`, `*.Rproj`,
   `_quarto.yml`), and VCS roots (`.git`, `.hg`, `.svn`).
+- `pyhere` command-line interface (`pyhere`, `pyhere <paths>`, `--report`,
+  `--version`).
 - PEP 561 typing support (`py.typed`).

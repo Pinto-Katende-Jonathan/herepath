@@ -92,6 +92,38 @@ unique marker string within the first 100 lines of the file, for extra safety.
 Create an empty `.here` marker file to pin a root when no other criterion
 applies.
 
+### `reset()`
+
+Forget the cached root so it is re-detected on the next call. Handy in
+long-lived sessions like **Jupyter notebooks** (after moving files or changing
+directory) and in tests.
+
+### `find_root(*criteria, start=".") -> Path`
+
+Lower-level escape hatch for custom root markers, in the spirit of R's
+`rprojroot::find_root`. Does not cache anything or touch the session root.
+Build criteria with `has_file`, `has_dir`, `has_glob`; a directory matches if it
+satisfies **any** of them:
+
+```python
+from pyhere import find_root, has_file, has_dir
+
+find_root(has_file("Makefile"), has_dir(".git"))
+```
+
+### Forcing the root with `PYHERE_ROOT`
+
+Set the `PYHERE_ROOT` environment variable to an existing directory to override
+auto-detection entirely. This is the recommended escape hatch for **Docker, CI,
+and deployment**, where heuristics may not apply:
+
+```bash
+PYHERE_ROOT=/app python analysis/report.py
+```
+
+If it points to a path that isn't a directory, `here()` raises `ValueError` so
+misconfiguration fails loudly. An explicit `i_am()` call still takes precedence.
+
 ### `dr_here(show_reason=True)`
 
 Print a "situation report" explaining where the root is and **why** — useful
@@ -103,6 +135,14 @@ here() starts at /home/me/myproject
 - Initial working directory: /home/me/myproject/analysis
 - Current working directory: /home/me/myproject/analysis
 ```
+
+## When *not* to use pyhere
+
+`pyhere` is for scripts, notebooks and analyses — code run from within a project
+tree. It is **not** meant for use inside an *installed* library: once a package
+is installed, the source layout no longer exists. To access data bundled with an
+installed package, use [`importlib.resources`](https://docs.python.org/3/library/importlib.resources.html)
+instead.
 
 ## Differences from the R package
 

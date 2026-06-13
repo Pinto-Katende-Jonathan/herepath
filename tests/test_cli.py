@@ -8,11 +8,9 @@ from pyhere import _core
 
 @pytest.fixture(autouse=True)
 def reset_state(monkeypatch, tmp_path):
+    monkeypatch.delenv(_core.ENV_VAR, raising=False)
     monkeypatch.chdir(tmp_path)
-    _core._state.root = None
-    _core._state.wd = None
-    _core._state.reason = None
-    _core._state.declared = False
+    _core.reset()
     yield
 
 

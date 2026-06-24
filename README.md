@@ -229,7 +229,20 @@ mypy                 # type-check
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. The project is tested
 on CPython 3.8 to 3.13 across Linux, macOS and Windows.
 
+## Authors and acknowledgements
+
+Main developer and creator: **Jonathan Katende Pinto**.
+
+Main contributors:
+
+- **MWANZA LUBUKAYI Henock**
+- **MUTONJI BUKAMA Arsène**
+- **KHANG MATE Emmanuel**
+- **MUKWIYO MUKALO Patrick**
+
+Inspired by the R [`here`](https://here.r-lib.org/) package by Kirill Müller and
+Jennifer Bryan.
+
 ## License
 
-[MIT](LICENSE), Jonathan Katende Pinto. Inspired by the R
-[`here`](https://here.r-lib.org/) package by Kirill Müller and Jennifer Bryan.
+[MIT](LICENSE), © Jonathan Katende Pinto.

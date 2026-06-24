@@ -6,31 +6,7 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
-### Added
-- `set_criteria(*criteria)` / `reset_criteria()`: customise the auto-detection
-  markers for the session (e.g. company-specific root files).
-- `using_root(path)`: context manager that temporarily pins the root and
-  restores it on exit (great for tests and notebooks).
-- `dr_here(trace=True)`: print the full upward search (every directory checked
-  and what matched) to debug unexpected roots.
-- Thread-safety: state mutations are guarded by a re-entrant lock.
-
-### Changed
-- `requirements.txt` is no longer a default root marker. It is commonly
-  duplicated in subdirectories and caused false-positive roots. Add it back with
-  `set_criteria(...)` if you rely on it.
-
-### Fixed
-- CLI now prints a clean one-line `Error: ...` to stderr and exits 1 on failure
-  (e.g. a misconfigured `HEREPATH_ROOT`) instead of dumping a traceback, so shell
-  capture like `ROOT="$(herepath)"` fails predictably.
-- `i_am()` now pins the root under the shared lock (atomic search-and-set),
-  consistent with `reset()` and auto-detection.
-- `using_root()` documents that it saves/restores the process-global root and is
-  intended for single-threaded use; mutating the root from another thread during
-  an active block is unsupported.
-
-## [0.1.0] - 2026-06-13
+## [0.1.0] - 2026-06-24
 
 Initial release. A Python port of the R [`here`](https://here.r-lib.org/)
 package.
@@ -43,17 +19,29 @@ package.
   one-line situation report on success. Optional `uuid` for extra safety.
 - `set_here(path=".", verbose=True)`: create a `.here` marker file.
 - `dr_here(show_reason=True)`: print a situation report explaining the root.
+  Pass `trace=True` to print the full upward search (every directory checked
+  and what matched) to debug unexpected roots.
 - `reset()`: forget the cached root so it is re-detected on next use
   (notebooks, tests).
 - `find_root(*criteria, start=".")` plus `has_file`, `has_dir`, `has_glob`
   criterion builders and the `Criterion` class: a lower-level escape hatch for
   custom root markers, in the spirit of `rprojroot::find_root`.
+- `set_criteria(*criteria)` / `reset_criteria()`: customise the auto-detection
+  markers for the session (e.g. company-specific root files).
+- `using_root(path)`: context manager that temporarily pins the root and
+  restores it on exit (great for tests and notebooks).
 - `HEREPATH_ROOT` environment variable to force the project root (Docker / CI /
   deployment). Raises `ValueError` if it does not point to a directory.
 - Root detection via ordered criteria: `.here`, Python project files
-  (`pyproject.toml`, `setup.py`/`.cfg`, `requirements.txt`, `Pipfile`,
-  `poetry.lock`, `environment.yml`), editors (`.vscode`, `.idea`, `*.Rproj`,
-  `_quarto.yml`), and VCS roots (`.git`, `.hg`, `.svn`).
+  (`pyproject.toml`, `setup.py`/`.cfg`, `Pipfile`, `poetry.lock`,
+  `environment.yml`), editors (`.vscode`, `.idea`, `*.Rproj`, `_quarto.yml`),
+  and VCS roots (`.git`, `.hg`, `.svn`). Note: `requirements.txt` is
+  deliberately not a default marker (commonly duplicated in subdirectories,
+  causing false-positive roots); add it back with `set_criteria(...)` if you
+  rely on it.
 - `herepath` command-line interface (`herepath`, `herepath <paths>`, `--report`,
-  `--version`).
+  `--version`). Prints a clean one-line `Error: ...` to stderr and exits 1 on
+  failure (e.g. a misconfigured `HEREPATH_ROOT`) so shell capture like
+  `ROOT="$(herepath)"` fails predictably.
+- Thread-safety: state mutations are guarded by a re-entrant lock.
 - PEP 561 typing support (`py.typed`).

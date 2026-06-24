@@ -24,15 +24,16 @@ dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "pytest-cov>=4", "ruff>=0.5", "mypy>=1.10"]
+docs = ["mkdocs-material>=9.5", "mkdocs-static-i18n>=1.2"]
 
 [project.scripts]
 herepath = "herepath.__main__:main"
 
 [project.urls]
-Homepage = "https://github.com/katendepinto/herepath"
-Documentation = "https://github.com/katendepinto/herepath#readme"
-Issues = "https://github.com/katendepinto/herepath/issues"
-Changelog = "https://github.com/katendepinto/herepath/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/Pinto-Katende-Jonathan/herepath"
+Documentation = "https://github.com/Pinto-Katende-Jonathan/herepath#readme"
+Issues = "https://github.com/Pinto-Katende-Jonathan/herepath/issues"
+Changelog = "https://github.com/Pinto-Katende-Jonathan/herepath/blob/main/CHANGELOG.md"
 "R original" = "https://here.r-lib.org/"
 
 [tool.setuptools.packages.find]

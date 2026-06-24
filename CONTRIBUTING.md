@@ -6,7 +6,7 @@ contributions of all sizes are welcome: bug reports, docs, tests, and code.
 ## Development setup
 
 ```bash
-git clone https://github.com/katendepinto/herepath
+git clone https://github.com/Pinto-Katende-Jonathan/herepath
 cd herepath
 python -m venv .venv
 . .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1

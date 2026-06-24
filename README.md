@@ -1,6 +1,6 @@
 # herepath
 
-[![CI](https://github.com/katendepinto/herepath/actions/workflows/ci.yml/badge.svg)](https://github.com/katendepinto/herepath/actions/workflows/ci.yml)
+[![CI](https://github.com/Pinto-Katende-Jonathan/herepath/actions/workflows/ci.yml/badge.svg)](https://github.com/Pinto-Katende-Jonathan/herepath/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/herepath.svg)](https://pypi.org/project/herepath/)
 [![Python versions](https://img.shields.io/pypi/pyversions/herepath.svg)](https://pypi.org/project/herepath/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)

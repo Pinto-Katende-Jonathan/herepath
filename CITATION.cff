@@ -23,5 +23,4 @@ keywords:
   - here
   - rprojroot
   - Python
-# After your first Zenodo release, add the DOI it mints, e.g.:
-# doi: "10.5281/zenodo.XXXXXXX"
+doi: "10.5281/zenodo.21779669"

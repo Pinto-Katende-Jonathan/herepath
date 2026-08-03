@@ -5,6 +5,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/herepath.svg)](https://pypi.org/project/herepath/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-online-teal)](https://pinto-katende-jonathan.github.io/herepath/)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21779669.svg)](https://doi.org/10.5281/zenodo.21779669)
 
 A simpler way to find your files. A Python port of the R [`here`](https://here.r-lib.org/) package.
 

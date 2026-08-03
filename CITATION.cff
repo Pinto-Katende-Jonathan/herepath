@@ -11,8 +11,8 @@ authors:
     family-names: Katende Pinto
     email: katendepinto@gmail.com
     # orcid: "https://orcid.org/0000-0000-0000-0000"  # add yours if you have one
-version: 0.1.0
-date-released: "2026-06-13"
+version: 0.1.1
+date-released: "2026-08-03"
 license: MIT
 repository-code: "https://github.com/Pinto-Katende-Jonathan/herepath"
 url: "https://github.com/Pinto-Katende-Jonathan/herepath"

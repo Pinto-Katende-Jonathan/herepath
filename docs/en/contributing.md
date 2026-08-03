@@ -241,5 +241,5 @@ A big thank you to our top contributors, whose work has shaped `herepath`:
 
 - **MWANZA LUBUKAYI Henock**
 - **MUTONJI BUKAMA Arsène**
-- **KHANG MATE Emmanuel**
+- **KHANG MATE ZULBAL Emmanuel**
 - **MUKWIYO MUKALO Patrick**

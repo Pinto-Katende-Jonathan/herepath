@@ -253,5 +253,5 @@ Un grand merci à nos meilleur·es contributeur·rices, dont le travail a façon
 
 - **MWANZA LUBUKAYI Henock**
 - **MUTONJI BUKAMA Arsène**
-- **KHANG MATE Emmanuel**
+- **KHANG MATE ZULBAL Emmanuel**
 - **MUKWIYO MUKALO Patrick**

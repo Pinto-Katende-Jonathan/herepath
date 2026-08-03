@@ -240,7 +240,7 @@ Main contributors:
 
 - **MWANZA LUBUKAYI Henock**
 - **MUTONJI BUKAMA Arsène**
-- **KHANG MATE Emmanuel**
+- **KHANG MATE ZULBAL Emmanuel**
 - **MUKWIYO MUKALO Patrick**
 
 Inspired by the R [`here`](https://here.r-lib.org/) package by Kirill Müller and

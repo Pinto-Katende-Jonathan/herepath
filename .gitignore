@@ -29,6 +29,9 @@ coverage.xml
 venv/
 env/
 
+# MkDocs build output
+site/
+
 # Editors / OS
 .vscode/
 .idea/

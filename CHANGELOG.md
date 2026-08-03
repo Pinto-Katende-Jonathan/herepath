@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-08-03
+
+### Added
+- No code changes; release published to trigger the first Zenodo archive/DOI
+  now that the GitHub repository is linked to Zenodo.
+
 ## [0.1.2] - 2026-08-03
 
 ### Fixed

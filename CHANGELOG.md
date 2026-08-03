@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-03
+
+### Fixed
+- Corrected a contributor's name in README and contributing docs.
+
 ## [0.1.1] - 2026-08-03
 
 ### Added

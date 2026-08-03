@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-08-03
+
+### Added
+- Added the project's main contributors as authors in `CITATION.cff` so they
+  are credited in the generated citation, matching the README's "Main
+  contributors" list.
+
 ## [0.1.3] - 2026-08-03
 
 ### Added

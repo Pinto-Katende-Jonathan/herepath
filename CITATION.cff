@@ -11,15 +11,15 @@ authors:
     family-names: Katende Pinto
     email: katendepinto@gmail.com
     # orcid: "https://orcid.org/0000-0000-0000-0000"  # add yours if you have one
-  - given-names: Henock
-    family-names: Mwanza Lubukayi
-  - given-names: Arsène
-    family-names: Mutonji Bukama
-  - given-names: Emmanuel
-    family-names: Khang Mate Zulbal
-  - given-names: Patrick
-    family-names: Mukwiyo Mukalo
-version: 0.1.3
+  - given-names: Henock Mwanza
+    family-names: Lubukayi
+  - given-names: Arsène Bukama
+    family-names: Mutonji
+  - given-names: Emmanuel Zulbal
+    family-names: Khang Mate
+  - given-names: Patrick Mukalo
+    family-names: Mukwiyo
+version: 0.1.4
 date-released: "2026-08-03"
 license: MIT
 repository-code: "https://github.com/Pinto-Katende-Jonathan/herepath"

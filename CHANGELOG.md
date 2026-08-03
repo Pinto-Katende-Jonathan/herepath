@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-08-03
+
+### Fixed
+- Corrected the family/given name split for Jonathan Katende Pinto in
+  `CITATION.cff` (family name is `Pinto`) and added his ORCID.
+
 ## [0.1.4] - 2026-08-03
 
 ### Added

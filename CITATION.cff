@@ -7,10 +7,10 @@ abstract: >-
   intended for scripts, notebooks and reproducible analyses.
 type: software
 authors:
-  - given-names: Jonathan
-    family-names: Katende Pinto
+  - given-names: Jonathan Katende
+    family-names: Pinto
     email: katendepinto@gmail.com
-    # orcid: "https://orcid.org/0000-0000-0000-0000"  # add yours if you have one
+    orcid: "https://orcid.org/0009-0003-8945-5473"
   - given-names: Henock Mwanza
     family-names: Lubukayi
   - given-names: Arsène Bukama
@@ -19,7 +19,7 @@ authors:
     family-names: Khang Mate
   - given-names: Patrick Mukalo
     family-names: Mukwiyo
-version: 0.1.4
+version: 0.1.5
 date-released: "2026-08-03"
 license: MIT
 repository-code: "https://github.com/Pinto-Katende-Jonathan/herepath"

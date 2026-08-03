@@ -58,6 +58,7 @@ exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:"]
 line-length = 100
 src = ["src", "tests"]
 target-version = "py38"
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "C4"]

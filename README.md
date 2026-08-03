@@ -4,8 +4,11 @@
 [![PyPI](https://img.shields.io/pypi/v/herepath.svg)](https://pypi.org/project/herepath/)
 [![Python versions](https://img.shields.io/pypi/pyversions/herepath.svg)](https://pypi.org/project/herepath/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-online-teal)](https://pinto-katende-jonathan.github.io/herepath/)
 
 A simpler way to find your files. A Python port of the R [`here`](https://here.r-lib.org/) package.
+
+📖 Full documentation (English/French): **<https://pinto-katende-jonathan.github.io/herepath/>**
 
 `herepath` builds paths relative to your project's root, no matter what the
 current working directory is. Stop writing brittle `../../data/x.csv` paths or

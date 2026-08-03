@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- Bilingual (English/French) documentation site built with MkDocs Material,
+  published at <https://pinto-katende-jonathan.github.io/herepath/> and
+  deployed automatically on push to `main`.
+
 ## [0.1.0] - 2026-06-24
 
 Initial release. A Python port of the R [`here`](https://here.r-lib.org/)

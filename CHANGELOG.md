@@ -11,6 +11,10 @@ All notable changes to this project are documented here. The format is based on
   published at <https://pinto-katende-jonathan.github.io/herepath/> and
   deployed automatically on push to `main`.
 
+### Changed
+- PyPI project's "Documentation" link now points to the docs site instead of
+  the GitHub README.
+
 ## [0.1.0] - 2026-06-24
 
 Initial release. A Python port of the R [`here`](https://here.r-lib.org/)

@@ -31,7 +31,7 @@ herepath = "herepath.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/Pinto-Katende-Jonathan/herepath"
-Documentation = "https://github.com/Pinto-Katende-Jonathan/herepath#readme"
+Documentation = "https://pinto-katende-jonathan.github.io/herepath/"
 Issues = "https://github.com/Pinto-Katende-Jonathan/herepath/issues"
 Changelog = "https://github.com/Pinto-Katende-Jonathan/herepath/blob/main/CHANGELOG.md"
 "R original" = "https://here.r-lib.org/"
